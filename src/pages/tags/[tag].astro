@@ -1,0 +1,39 @@
+---
+import BlogPost from "../../components/BlogPost.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+export async function getStaticPaths() {
+  const allPosts = Object.values(
+    import.meta.glob("../posts/*.md", { eager: true }),
+  );
+  const tagsSet = new Set();
+
+  allPosts.forEach((post: any) => {
+    const tags = post.frontmatter.tags;
+
+    tags.forEach((tag: any) => {
+      !tagsSet.has(tag) && tagsSet.add(tag);
+    });
+  });
+
+  return Array.from(tagsSet).map((tag: any) => ({
+    params: { tag },
+    props: {
+      posts: allPosts.filter((post: any) =>
+        post.frontmatter.tags?.includes(tag),
+      ),
+    },
+  }));
+}
+
+const { tag } = Astro.params;
+const { posts } = Astro.props;
+---
+
+<BaseLayout pageTitle={tag}>
+  <p>Posts tagged with {tag}</p>
+
+  {posts.map((post: any) => (
+    <BlogPost title={post.frontmatter.title} url={post.url} />
+  ))}
+</BaseLayout>
